@@ -1,9 +1,10 @@
 <?php
-/* Copyright (C) 2003-2007 Rodolphe Quiedeville <rodolphe@quiedeville.org>
- * Copyright (C) 2003      Xavier Dutoit        <doli@sydesy.com>
- * Copyright (C) 2004-2020 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2017 Regis Houssin      	<regis.houssin@inodbox.com>
- * Copyright (C) 2006 	   Jean Heimburger    	<jean@tiaris.info>
+/* Copyright (C) 2003-2007  Rodolphe Quiedeville    <rodolphe@quiedeville.org>
+ * Copyright (C) 2003       Xavier Dutoit           <doli@sydesy.com>
+ * Copyright (C) 2004-2020  Laurent Destailleur     <eldy@users.sourceforge.net>
+ * Copyright (C) 2005-2017  Regis Houssin           <regis.houssin@inodbox.com>
+ * Copyright (C) 2006 	    Jean Heimburger         <jean@tiaris.info>
+ * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,36 +55,59 @@ class Conf extends stdClass
 
 	//! To store some setup of generic modules
 	public $mycompany;
+
+	/**
+	 * @var stdClass
+	 */
 	public $admin;
+
+	/**
+	 * @var stdClass
+	 */
 	public $medias;
-	//! To store properties of multi-company
+
+	/**
+	 * @var stdClass To store properties of multi-company
+	 */
 	public $multicompany;
 
 	//! To store module status of special module names
 	public $expedition_bon;
 	public $delivery_note;
 
-
-	//! To store if javascript/ajax is enabked
+	/**
+	 * @var int To store if javascript/ajax is enabled
+	 */
 	public $use_javascript_ajax;
-	//! To store if javascript/ajax is enabked
+
+	/**
+	 * @var int To store if compute is enabled
+	 */
 	public $disable_compute;
-	//! Used to store current currency (ISO code like 'USD', 'EUR', ...). To get the currency symbol: $langs->getCurrencySymbol($this->currency)
+
+	/**
+	 * @var string Used to store current currency (ISO code like 'USD', 'EUR', ...). To get the currency symbol: $langs->getCurrencySymbol($this->currency)
+	 */
 	public $currency;
 
 	/**
-	 * @var string
+	 * @var string Contains current theme ("eldy", "auguria", ...)
 	 */
-	public $theme; // Contains current theme ("eldy", "auguria", ...)
-	//! Used to store current css (from theme)
+	public $theme;
+
+	/**
+	 * @var string Contains full path of css page ("/theme/eldy/style.css.php", ...)
+	 */
+	public $css;
+
 	/**
 	 * @var string
 	 */
-	public $css; // Contains full path of css page ("/theme/eldy/style.css.php", ...)
-
 	public $email_from;
 
-	//! Used to store current menu handler
+	/**
+	 * @var string Used to store current menu handler
+	 */
 	public $standard_menu;
 
 	/**
@@ -119,15 +143,34 @@ class Conf extends stdClass
 	 * @var int Used to store running instance for multi-company (default 1)
 	 */
 	public $entity = 1;
+
 	/**
 	 * @var int[] Used to store list of entities to use for each element
 	 */
 	public $entities = array();
 
-	public $dol_hide_topmenu; // Set if we force param dol_hide_topmenu into login url
-	public $dol_hide_leftmenu; // Set if we force param dol_hide_leftmenu into login url
-	public $dol_optimize_smallscreen; // Set if we force param dol_optimize_smallscreen into login url or if browser is smartphone
-	public $dol_no_mouse_hover; // Set if we force param dol_no_mouse_hover into login url or if browser is smartphone
+	/**
+	 * @var int Set if we force param dol_hide_topmenu into login url
+	 */
+	public $dol_hide_topmenu;
+
+	/**
+	 * @var int Set if we force param dol_hide_leftmenu into login url
+	 */
+	public $dol_hide_leftmenu;
+
+	/**
+	 * @var int Set if we force param dol_optimize_smallscreen into login url or if browser is smartphone
+	 */
+	public $dol_optimize_smallscreen;
+
+	/**
+	 * @var int Set if we force param dol_no_mouse_hover into login url or if browser is smartphone
+	 */
+	public $dol_no_mouse_hover;
+	/**
+	 * @var int
+	 */
 	public $dol_use_jmobile; // Set if we force param dol_use_jmobile into login url. 0=default, 1=to say we use app from a webview app, 2=to say we use app from a webview app and keep ajax
 
 	public $format_date_short; // Format of day with PHP/C tags (strftime functions)
@@ -141,9 +184,20 @@ class Conf extends stdClass
 	public $format_date_hour_text_short;
 	public $format_date_hour_text;
 
+	/**
+	 * @var int limit for list
+	 */
 	public $liste_limit;
 
-	public $tzuserinputkey = 'tzserver';		// Use 'tzuserrel' to always store date in GMT and show date in time zone of user.
+	/**
+	 * @var int checkboxes are on left column if 1
+	 */
+	public $main_checkbox_left_column;
+
+	/**
+	 * @var string  Use 'tzuserrel' to always store date in GMT and show date in time zone of user.
+	 */
+	public $tzuserinputkey = 'tzserver';
 
 
 	// TODO Remove this part.
@@ -159,46 +213,127 @@ class Conf extends stdClass
 	public $product;
 
 	/**
+	 * @var stdClass
 	 * @deprecated Use product
 	 */
 	public $produit;
-	public $service;
+
 	/**
+	 * @var stdClass  	service
+	 */
+	public $service;
+
+	/**
+	 * @var stdClass
 	 * @deprecated Use contract
 	 */
 	public $contrat;
-	public $contract;
-	public $actions;
-	public $agenda;
-	public $propal;
+
 	/**
+	 * @var stdClass Contract
+	 */
+	public $contract;
+
+	/**
+	 * @var stdClass
+	 */
+	public $actions;
+
+	/**
+	 * @var stdClass
+	 */
+	public $agenda;
+
+	/**
+	 * @var stdClass
+	 */
+	public $propal;
+
+	/**
+	 * @var stdClass
 	 * @deprecated Use order
 	 */
 	public $commande;
-	public $order;
+
 	/**
+	 * @var stdClass
+	 */
+	public $order;
+
+	/**
+	 * @var stdClass
 	 * @deprecated Use invoice
 	 */
 	public $facture;
-	public $invoice;
-	public $user;
+
 	/**
+	 * @var stdClass
+	 */
+	public $invoice;
+
+	/**
+	 * @var stdClass
+	 */
+	public $user;
+
+	/**
+	 * @var stdClass
 	 * @deprecated Use member
 	 */
 	public $adherent;
+
+	/**
+	 * @var stdClass
+	 */
 	public $member;
+
+	/**
+	 * @var stdClass
+	 */
 	public $bank;
+
+	/**
+	 * @var stdClass
+	 */
 	public $notification;
+
+	/**
+	 * @var stdClass
+	 */
 	public $expensereport;
+
+	/**
+	 * @var stdClass
+	 */
 	public $productbatch;
 	/**
 	 * @deprecated Use project
 	 */
 	public $projet;
+
+	/**
+	 * @var stdClass
+	 */
 	public $project;
+
+	/**
+	 * @var stdClass
+	 */
 	public $supplier_proposal;
+
+	/**
+	 * @var stdClass
+	 */
 	public $supplier_order;
+
+	/**
+	 * @var stdClass
+	 */
 	public $supplier_invoice;
+
+	/**
+	 * @var stdClass
+	 */
 	public $category;
 
 
@@ -243,7 +378,8 @@ class Conf extends stdClass
 			'hooks' => array(),
 			'dir' => array(),
 			'syslog' => array(),
-			'websitetemplates' => array()
+			'websitetemplates' => array(),
+			//'captcha' => array()	// Can be removed,this does not generates warning
 		);
 
 		// First level object that are modules.
@@ -261,9 +397,11 @@ class Conf extends stdClass
 		$this->user	= new stdClass();
 		$this->adherent = new stdClass();
 		$this->bank = new stdClass();
+		$this->mailing = new stdClass();
 		$this->notification = new stdClass();
 		$this->expensereport = new stdClass();
 		$this->productbatch = new stdClass();
+		$this->api = new stdClass();
 	}
 
 
@@ -419,6 +557,8 @@ class Conf extends stdClass
 									$newvalue = '/'.$modulename.'/core/'.$partname.'/';
 								} elseif (in_array($partname, array('models', 'theme', 'websitetemplates'))) {
 									$newvalue = '/'.$modulename.'/';
+								} elseif (in_array($partname, array('captcha'))) {
+									$newvalue = '/'.$modulename.'/core/modules/security/'.$partname.'/';
 								} elseif ($value == 1) {
 									$newvalue = '/'.$modulename.'/core/modules/'.$partname.'/'; // ex: partname = societe
 								} else {	// $partname can be any other value like 'sms', ...
@@ -738,7 +878,7 @@ class Conf extends stdClass
 			// conf->use_javascript_ajax
 			$this->use_javascript_ajax = 1;
 			if (isset($this->global->MAIN_DISABLE_JAVASCRIPT)) {
-				$this->use_javascript_ajax = !$this->global->MAIN_DISABLE_JAVASCRIPT;
+				$this->use_javascript_ajax = (int) !$this->global->MAIN_DISABLE_JAVASCRIPT;
 			}
 			// If no javascript_ajax, Ajax features are disabled.
 			if (empty($this->use_javascript_ajax)) {
@@ -811,15 +951,23 @@ class Conf extends stdClass
 			}
 
 			// conf->liste_limit = constant to limit size of lists
+			// This value can be overwritten by user choice in main.inc.php
 			$this->liste_limit = getDolGlobalInt('MAIN_SIZE_LISTE_LIMIT', 15);
 			if ((int) $this->liste_limit <= 0) {
-				// Mode automatic.
+				// Mode automatic. Similar code than into main.inc.php
 				$this->liste_limit = 15;
-				if (!empty($_SESSION['dol_screenheight']) && $_SESSION['dol_screenheight'] < 910) {
+				if (!empty($_SESSION['dol_screenheight']) && $_SESSION['dol_screenheight'] < 700) {
+					$this->liste_limit = 8;
+				} elseif (!empty($_SESSION['dol_screenheight']) && $_SESSION['dol_screenheight'] < 910) {
 					$this->liste_limit = 10;
 				} elseif (!empty($_SESSION['dol_screenheight']) && $_SESSION['dol_screenheight'] > 1130) {
 					$this->liste_limit = 20;
 				}
+			}
+
+			// conf->main_checkbox_left_column = constant to set checkbox list to left
+			if (!isset($this->main_checkbox_left_column)) {
+				$this->main_checkbox_left_column = getDolGlobalInt("MAIN_CHECKBOX_LEFT_COLUMN");
 			}
 
 			// Set PRODUIT_LIMIT_SIZE if never defined
@@ -934,6 +1082,11 @@ class Conf extends stdClass
 				$this->global->USE_STRICT_CSV_RULES = 2;
 			}
 
+			// By default, accept to create members with no login
+			if (!isset($this->global->ADHERENT_LOGIN_NOT_REQUIRED)) {
+				$this->global->ADHERENT_LOGIN_NOT_REQUIRED = 1;
+			}
+
 			// Use a SCA ready workflow with Stripe module (STRIPE_USE_INTENT_WITH_AUTOMATIC_CONFIRMATION by default if nothing defined)
 			if (!isset($this->global->STRIPE_USE_INTENT_WITH_AUTOMATIC_CONFIRMATION) && empty($this->global->STRIPE_USE_NEW_CHECKOUT)) {
 				$this->global->STRIPE_USE_INTENT_WITH_AUTOMATIC_CONFIRMATION = 1;
@@ -948,6 +1101,7 @@ class Conf extends stdClass
 					$this->global->MAIN_MODULES_FOR_EXTERNAL .= ",".$key;
 				}
 			}
+			//$this->global->MAIN_MODULES_FOR_EXTERNAL .= ",ecm";
 
 			// Enable select2
 			if (empty($this->global->MAIN_USE_JQUERY_MULTISELECT) || $this->global->MAIN_USE_JQUERY_MULTISELECT == '1') {
@@ -1033,7 +1187,7 @@ class Conf extends stdClass
 				$this->holiday->approve->warning_delay = (isset($this->global->MAIN_DELAY_HOLIDAYS) ? (int) $this->global->MAIN_DELAY_HOLIDAYS : 0) * 86400;
 			}
 
-			if (!empty($this->global->PRODUIT_MULTIPRICES) && empty($this->global->PRODUIT_MULTIPRICES_LIMIT)) {
+			if ((!empty($this->global->PRODUIT_MULTIPRICES) || getDolGlobalString('PRODUIT_CUSTOMER_PRICES_AND_MULTIPRICES')) && empty($this->global->PRODUIT_MULTIPRICES_LIMIT)) {
 				$this->global->PRODUIT_MULTIPRICES_LIMIT = 5;
 			}
 
@@ -1062,6 +1216,10 @@ class Conf extends stdClass
 				$this->global->MAIN_JS_GRAPH = 'chart'; // Use chart.js library
 			}
 
+			if (!isset($this->global->THEME_ELDY_USEBORDERONTABLE)) {
+				$this->global->THEME_ELDY_USEBORDERONTABLE = 1;
+			}
+
 			if (empty($this->global->MAIN_MODULE_DOLISTORE_API_SRV)) {
 				$this->global->MAIN_MODULE_DOLISTORE_API_SRV = 'https://www.dolistore.com';
 			}
@@ -1086,6 +1244,7 @@ class Conf extends stdClass
 				$this->global->MAIL_SMTP_USE_FROM_FOR_HELO = 2;	// Use the domain in $dolibarr_main_url_root (mydomain.com)
 			}
 
+			// Security
 			if (!defined('MAIN_ANTIVIRUS_BYPASS_COMMAND_AND_PARAM')) {
 				if (defined('MAIN_ANTIVIRUS_COMMAND')) {
 					$this->global->MAIN_ANTIVIRUS_COMMAND = constant('MAIN_ANTIVIRUS_COMMAND');
@@ -1093,6 +1252,13 @@ class Conf extends stdClass
 				if (defined('MAIN_ANTIVIRUS_PARAM')) {
 					$this->global->MAIN_ANTIVIRUS_PARAM = constant('MAIN_ANTIVIRUS_PARAM');
 				}
+			}
+
+			if (!isset($this->MAIN_RESTRICTHTML_ONLY_VALID_HTML)) {
+				$this->global->MAIN_RESTRICTHTML_ONLY_VALID_HTML = 1;
+			}
+			if (!isset($this->MAIN_RESTRICTHTML_ONLY_VALID_HTML_TIDY) && extension_loaded('tidy') && class_exists("tidy")) {
+				$this->global->MAIN_RESTRICTHTML_ONLY_VALID_HTML_TIDY = 1;
 			}
 
 			// For backward compatibility

@@ -38,8 +38,8 @@ if (!defined('NOTOKENRENEWAL')) {
  * @param	string			$target				Target to use on links
  * @param 	int    			$disablejs			More content into html header
  * @param 	int    			$disablehead		More content into html header
- * @param 	array|string  	$arrayofjs			Array of complementary js files
- * @param 	array|string  	$arrayofcss			Array of complementary css files
+ * @param 	string[]|string	$arrayofjs			Array of complementary js files
+ * @param 	string[]|string	$arrayofcss			Array of complementary css files
  * @param	string			$morequerystring	Query string to add to the link "print" to get same parameters (use only if autodetect fails)
  * @param   string  		$morecssonbody      More CSS on body tag. For example 'classforhorizontalscrolloftabs'.
  * @param	string			$replacemainareaby	Replace call to main_area() by a print of this string
@@ -71,6 +71,14 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/imports/class/import.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/import/modules_import.php';
 
+/**
+ * @var Conf $conf
+ * @var DoliDB $db
+ * @var HookManager $hookmanager
+ * @var Translate $langs
+ * @var User $user
+ */
+
 $datatoimport = GETPOST('datatoimport');
 $format = GETPOST('format');
 
@@ -79,7 +87,7 @@ $langs->load("exports");
 
 // Check exportkey
 if (empty($datatoimport)) {
-	$user->getrights();
+	$user->loadRights();
 
 	llxHeader();
 	print '<div class="error">Bad value for datatoimport.</div>';

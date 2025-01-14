@@ -36,6 +36,14 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/project.class.php';
 require_once DOL_DOCUMENT_ROOT.'/projet/class/task.class.php';
 
+/**
+ * @var Conf $conf
+ * @var DoliDB $db
+ * @var HookManager $hookmanager
+ * @var Translate $langs
+ * @var User $user
+ */
+
 // Load translation files required by the page
 $langs->loadLangs(array('projects', 'users', 'companies'));
 
@@ -49,7 +57,7 @@ $mode = GETPOST('mode', 'aZ');
 
 $id = GETPOSTINT('id');
 
-$search_all = trim((GETPOST('search_all', 'alphanohtml') != '') ? GETPOST('search_all', 'alphanohtml') : GETPOST('sall', 'alphanohtml'));
+$search_all = trim(GETPOST('search_all', 'alphanohtml'));
 $search_categ = GETPOST("search_categ", 'intcomma');
 $search_projectstatus = GETPOST('search_projectstatus', 'intcomma');
 $search_project_ref = GETPOST('search_project_ref');
@@ -301,7 +309,8 @@ if ($id) {
 	$projectstatic->fetch_thirdparty();
 }
 
-// Get list of project id allowed to user (in a string list separated by coma)
+$projectsListId = '0';
+// Get list of project id allowed to user (in a comma separated string list)
 if (!$user->hasRight('projet', 'all', 'lire')) {
 	$projectsListId = $projectstatic->getProjectsAuthorizedForUser($user, 0, 1, $socid);
 }
@@ -539,7 +548,7 @@ if (!empty($arrayfields['t.tobill']['checked']) || !empty($arrayfields['t.billed
 	$sql .= " GROUP BY p.rowid, p.ref, p.title, p.fk_statut, p.datee, p.fk_opp_status, p.public, p.fk_user_creat,";
 	$sql .= " s.nom, s.rowid,";
 	$sql .= " t.datec, t.dateo, t.datee, t.tms,";
-	$sql .= " t.rowid, t.ref, t.label, t.planned_workload, t.duration_effective, t.progress,t.budget_amount, t.fk_statut as status";
+	$sql .= " t.rowid, t.ref, t.label, t.planned_workload, t.duration_effective, t.progress,t.budget_amount, t.fk_statut";
 	// Add fields from extrafields
 	if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 		foreach ($extrafields->attributes[$object->table_element]['label'] as $key => $val) {
@@ -704,7 +713,7 @@ foreach ($searchCategoryCustomerList as $searchCategoryCustomer) {
 include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_list_search_param.tpl.php';
 // Add $param from hooks
 $parameters = array('param' => &$param);
-$reshook = $hookmanager->executeHooks('printFieldListSearchParam', $parameters, $object); // Note that $action and $object may have been modified by hook
+$reshook = $hookmanager->executeHooks('printFieldListSearchParam', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 $param .= $hookmanager->resPrint;
 
 // List of mass actions available
@@ -748,18 +757,18 @@ $newcardbutton .= dolGetButtonTitle($langs->trans('NewTask'), '', 'fa fa-plus-ci
 
 
 // Show description of content
-$texthelp = '';
+$htmltooltip = '';
 if ($search_task_user == $user->id) {
-	$texthelp .= $langs->trans("MyTasksDesc");
+	$htmltooltip .= $langs->trans("MyTasksDesc");
 } else {
 	if ($user->hasRight('projet', 'all', 'lire') && !$socid) {
-		$texthelp .= $langs->trans("TasksOnProjectsDesc");
+		$htmltooltip .= $langs->trans("TasksOnProjectsDesc");
 	} else {
-		$texthelp .= $langs->trans("TasksOnProjectsPublicDesc");
+		$htmltooltip .= $langs->trans("TasksOnProjectsPublicDesc");
 	}
 }
 
-print_barre_liste($form->textwithpicto($title, $texthelp), $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, 'projecttask', 0, $newcardbutton, '', $limit, 0, 0, 1);
+print_barre_liste($form->textwithpicto($title, $htmltooltip), $page, $_SERVER["PHP_SELF"], $param, $sortfield, $sortorder, $massactionbutton, $num, $nbtotalofrecords, 'projecttask', 0, $newcardbutton, '', $limit, 0, 0, 1);
 
 $topicmail = "Information";
 $modelmail = "task";
@@ -1082,6 +1091,7 @@ if (!empty($arrayfields['t.budget_amount']['checked'])) {
 	$totalarray['nbfield']++;
 }
 if (!empty($arrayfields['t.tobill']['checked'])) {
+	// @phan-suppress-next-line PhanTypeInvalidDimOffset
 	print_liste_field_titre($arrayfields['t.tobill']['label'], $_SERVER["PHP_SELF"], "", "", $param, '', $sortfield, $sortorder, 'center ');
 	$totalarray['nbfield']++;
 }
@@ -1099,7 +1109,7 @@ $parameters = array(
 	'sortorder' => $sortorder,
 	'totalarray' => &$totalarray,
 );
-$reshook = $hookmanager->executeHooks('printFieldListTitle', $parameters); // Note that $action and $object may have been modified by hook
+$reshook = $hookmanager->executeHooks('printFieldListTitle', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
 print $hookmanager->resPrint;
 if (!empty($arrayfields['t.datec']['checked'])) {
 	print_liste_field_titre($arrayfields['t.datec']['label'], $_SERVER["PHP_SELF"], "t.datec", "", $param, '', $sortfield, $sortorder, 'center nowrap ');
@@ -1459,7 +1469,7 @@ while ($i < $imaxinloop) {
 			if (!empty($arrayfields['t.progress_summary']['checked'])) {
 				print '<td class="center">';
 				//if ($obj->progress != '') {
-					print getTaskProgressView($object, false, false);
+				print getTaskProgressView($object, false, false);
 				//}
 				print '</td>';
 				if (!$i) {
@@ -1633,6 +1643,7 @@ if (isset($totalarray['totaldurationeffectivefield']) || isset($totalarray['tota
 			print '<td class="center">'.price((float) $totalarray['totalbudgetamount'], 0, $langs, 1, 0, 0, $conf->currency).'</td>';
 		} elseif (!empty($totalarray['pos'][$i])) {
 			print '<td class="right">';
+			// @phan-suppress-next-line PhanTypeInvalidDimOffset
 			if (isset($totalarray['type']) && $totalarray['type'][$i] == 'duration') {
 				print(!empty($totalarray['val'][$totalarray['pos'][$i]]) ? convertSecondToTime($totalarray['val'][$totalarray['pos'][$i]], 'allhourmin') : 0);
 			} else {

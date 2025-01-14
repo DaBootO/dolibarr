@@ -33,7 +33,7 @@
  * Initialize the array of tabs for customer invoice
  *
  * @param	Facture		$object		Invoice object
- * @return	array					Array of head tabs
+ * @return	array<array{0:string,1:string,2:string}>	Array of tabs to show
  */
 function facture_prepare_head($object)
 {
@@ -164,7 +164,7 @@ function facture_prepare_head($object)
 /**
  * Return array head with list of tabs to view object information.
  *
- * @return array head array with tabs
+ * @return	array<array{0:string,1:string,2:string}>	Array of tabs to show
  */
 function invoice_admin_prepare_head()
 {
@@ -248,7 +248,7 @@ function invoice_admin_prepare_head()
  * Return array head with list of tabs to view object information.
  *
  * @param   FactureRec  $object     Invoice model object
- * @return array                    head array with tabs
+ * @return	array<array{0:string,1:string,2:string}>	Array of tabs to show
  */
 function invoice_rec_prepare_head($object)
 {
@@ -261,6 +261,43 @@ function invoice_rec_prepare_head($object)
 	$head[$h][1] = $langs->trans("RepeatableInvoice");
 	$head[$h][2] = 'card';
 	$h++;
+
+	$head[$h][0] = DOL_URL_ROOT . '/compta/facture/list.php?search_fk_fac_rec_source=' . $object->id;
+	$head[$h][1] = $langs->trans('InvoicesGeneratedFromRec');
+	//count facture rec
+	$nbFacture = 0;
+	$sql = "SELECT COUNT(rowid) as nb";
+	$sql .= " FROM ".MAIN_DB_PREFIX."facture";
+	$sql .= " WHERE fk_fac_rec_source = ".((int) $object->id);
+	$resql = $db->query($sql);
+	if ($resql) {
+		$obj = $db->fetch_object($resql);
+		$nbFacture = $obj->nb;
+	} else {
+		dol_syslog('Failed to count invoices with invoice model '.$db->lasterror(), LOG_ERR);
+	}
+	if ($nbFacture > 0) {
+		$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbFacture.'</span>';
+	}
+	$head[$h][2] = 'generated';
+	$h++;
+
+	if (!getDolGlobalString('MAIN_DISABLE_NOTES_TAB')) {
+		$nbNote = 0;
+		if (!empty($object->note_private)) {
+			$nbNote++;
+		}
+		if (!empty($object->note_public)) {
+			$nbNote++;
+		}
+		$head[$h][0] = DOL_URL_ROOT.'/compta/facture/note-rec.php?id='.$object->id;
+		$head[$h][1] = $langs->trans('Notes');
+		if ($nbNote > 0) {
+			$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbNote.'</span>';
+		}
+		$head[$h][2] = 'note';
+		$h++;
+	}
 
 	$head[$h][0] = DOL_URL_ROOT.'/compta/facture/agenda-rec.php?id='.$object->id;
 	$head[$h][1] = $langs->trans("Events");
@@ -310,8 +347,8 @@ function invoice_rec_prepare_head($object)
 /**
  * Return array head with list of tabs to view object information.
  *
- * @param   Facture     $object     Invoice object
- * @return array                    head array with tabs
+ * @param   Facture|FactureFournisseurRec     $object     Invoice object
+ * @return	array<array{0:string,1:string,2:string}>	Array of tabs to show
  */
 function supplier_invoice_rec_prepare_head($object)
 {
@@ -323,6 +360,43 @@ function supplier_invoice_rec_prepare_head($object)
 	$head[$h][0] = DOL_URL_ROOT . '/fourn/facture/card-rec.php?id=' . $object->id;
 	$head[$h][1] = $langs->trans("RepeatableSupplierInvoice");
 	$head[$h][2] = 'card';
+	$h++;
+
+	if (!getDolGlobalString('MAIN_DISABLE_NOTES_TAB')) {
+		$nbNote = 0;
+		if (!empty($object->note_private)) {
+			$nbNote++;
+		}
+		if (!empty($object->note_public)) {
+			$nbNote++;
+		}
+		$head[$h][0] = DOL_URL_ROOT.'/fourn/facture/note-rec.php?id='.$object->id;
+		$head[$h][1] = $langs->trans('Notes');
+		if ($nbNote > 0) {
+			$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbNote.'</span>';
+		}
+		$head[$h][2] = 'note';
+		$h++;
+	}
+	$head[$h][0] = DOL_URL_ROOT . '/fourn/facture/list.php?search_fk_fac_rec_source=' . $object->id;
+	$head[$h][1] = $langs->trans('InvoicesGeneratedFromRec');
+
+	//count facture rec
+	$nbFactureFourn = 0;
+	$sql = "SELECT COUNT(rowid) as nb";
+	$sql .= " FROM ".MAIN_DB_PREFIX."facture_fourn";
+	$sql .= " WHERE fk_fac_rec_source = ".((int) $object->id);
+	$resql = $db->query($sql);
+	if ($resql) {
+		$obj = $db->fetch_object($resql);
+		$nbFactureFourn = $obj->nb;
+	} else {
+		dol_syslog('Failed to count invoices with supplier invoice model '.$db->lasterror(), LOG_ERR);
+	}
+	if ($nbFactureFourn > 0) {
+		$head[$h][1] .= '<span class="badge marginleftonlyshort">'.$nbFactureFourn.'</span>';
+	}
+	$head[$h][2] = 'generated';
 	$h++;
 
 	// Show more tabs from modules
@@ -366,7 +440,7 @@ function getNumberInvoicesPieChart($mode)
 
 		$amount_mode = (getDolGlobalInt('FACTURE_VALIDATED_IN_AMOUNT') == 1);
 
-				$sql = "SELECT";
+		$sql = "SELECT";
 		$sql .= " sum(".$db->ifsql("f.date_lim_reglement < '".date_format($datenowsub30, 'Y-m-d')."'", $amount_mode ? "f.total_ht" : 1, 0).") as late30";
 		$sql .= ", sum(".$db->ifsql("f.date_lim_reglement < '".date_format($datenowsub15, 'Y-m-d')."' AND f.date_lim_reglement >= '".date_format($datenowsub30, 'Y-m-d')."'", $amount_mode ? "f.total_ht" : 1, 0).") as late15";
 		$sql .= ", sum(".$db->ifsql("f.date_lim_reglement < '".date_format($now, 'Y-m-d')."' AND f.date_lim_reglement >= '".date_format($datenowsub15, 'Y-m-d')."'", $amount_mode ? "f.total_ht" : 1, 0).") as latenow";
@@ -592,6 +666,7 @@ function getCustomerInvoiceDraftTable($maxCount = 500, $socid = 0)
 					$companystatic->code_client = $obj->code_client;
 					$companystatic->code_fournisseur = $obj->code_fournisseur;
 					$companystatic->code_compta = $obj->code_compta;
+					$companystatic->code_compta_client = $obj->code_compta;
 					$companystatic->code_compta_fournisseur = $obj->code_compta_fournisseur;
 
 					$result .= '<tr class="oddeven">';
@@ -726,6 +801,7 @@ function getDraftSupplierTable($maxCount = 500, $socid = 0)
 					$companystatic->code_client = $obj->code_client;
 					$companystatic->code_fournisseur = $obj->code_fournisseur;
 					$companystatic->code_compta = $obj->code_compta;
+					$companystatic->code_compta_client = $obj->code_compta;
 					$companystatic->code_compta_fournisseur = $obj->code_compta_fournisseur;
 
 					$result .= '<tr class="oddeven">';
@@ -829,6 +905,7 @@ function getCustomerInvoiceLatestEditTable($maxCount = 5, $socid = 0)
 		$objectstatic->ref = $obj->ref;
 		$objectstatic->paye = $obj->paye;
 		$objectstatic->statut = $obj->status;
+		$objectstatic->status = $obj->status;
 		$objectstatic->total_ht = $obj->total_ht;
 		$objectstatic->total_tva = $obj->total_tva;
 		$objectstatic->total_ttc = $obj->total_ttc;
@@ -862,7 +939,7 @@ function getCustomerInvoiceLatestEditTable($maxCount = 5, $socid = 0)
 
 		// Load amount of existing payment of invoice (needed for complete status)
 		$payment = $objectstatic->getSommePaiement();
-		$result .= '<td class="right">'.$objectstatic->getLibStatut(5, $payment).'</td>';
+		$result .= '<td class="right">'.$objectstatic->getLibStatut(3, $payment).'</td>';
 
 		$result .= '</tr>';
 
@@ -972,11 +1049,11 @@ function getPurchaseInvoiceLatestEditTable($maxCount = 5, $socid = 0)
 
 		$result .= '<td class="tdoverflowmax150">'.$companystatic->getNomUrl(1, 'supplier').'</td>';
 
-		$result .= '<td>'.dol_print_date($db->jdate($obj->datec), 'day').'</td>';
+		$result .= '<td title="'.$langs->trans("DateModification").': '.dol_print_date($db->jdate($obj->datec), 'dayhour').'">'.dol_print_date($db->jdate($obj->datec), 'day').'</td>';
 
 		$result .= '<td class="amount right">'.price($obj->total_ttc).'</td>';
 
-		$result .= '<td class="right">'.$objectstatic->getLibStatut(5).'</td>';
+		$result .= '<td class="right">'.$objectstatic->getLibStatut(3).'</td>';
 
 		$result .= '</tr>';
 
@@ -1096,6 +1173,7 @@ function getCustomerInvoiceUnpaidOpenTable($maxCount = 500, $socid = 0)
 					$societestatic->code_client = $obj->code_client;
 					$societestatic->code_fournisseur = $obj->code_fournisseur;
 					$societestatic->code_compta = $obj->code_compta;
+					$societestatic->code_compta_client = $obj->code_compta;
 					$societestatic->code_compta_fournisseur = $obj->code_compta_fournisseur;
 
 					print '<tr class="oddeven">';
@@ -1228,8 +1306,6 @@ function getPurchaseInvoiceUnpaidOpenTable($maxCount = 500, $socid = 0)
 			$num = $db->num_rows($resql);
 			$othernb = 0;
 
-			$formfile = new FormFile($db);
-
 			print '<div class="div-table-responsive-no-min">';
 			print '<table class="noborder centpercent">';
 
@@ -1249,7 +1325,9 @@ function getPurchaseInvoiceUnpaidOpenTable($maxCount = 500, $socid = 0)
 			print '<th class="right">'.$langs->trans("Paid").'</th>';
 			print '<th width="16">&nbsp;</th>';
 			print "</tr>\n";
+
 			$societestatic = new Societe($db);
+
 			if ($num) {
 				$i = 0;
 				$total = $total_ttc = $totalam = 0;
@@ -1283,6 +1361,7 @@ function getPurchaseInvoiceUnpaidOpenTable($maxCount = 500, $socid = 0)
 					$societestatic->code_client = $obj->code_client;
 					$societestatic->code_fournisseur = $obj->code_fournisseur;
 					$societestatic->code_compta = $obj->code_compta;
+					$societestatic->code_compta_client = $obj->code_compta;
 					$societestatic->code_compta_fournisseur = $obj->code_compta_fournisseur;
 
 					print '<tr class="oddeven">';
