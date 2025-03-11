@@ -78,7 +78,8 @@ if (getDolGlobalString('BOM_SUB_BOM') && $filtertype != 1) {
 print '</td>';
 
 // Qty
-print '<td class="linecolqty width100 right">'.$form->textwithpicto($langs->trans('Qty'), ($filtertype != 1) ? $langs->trans("QtyRequiredIfNoLoss") : '').'</td>';
+// print '<td class="linecolqty width100 right">'.$form->textwithpicto($langs->trans('Qty'), ($filtertype != 1) ? $langs->trans("QtyRequiredIfNoLoss") : '').'</td>';
+print '<td class="linecolqty width100 right">'.$form->textwithpicto($langs->trans("Qty"), '').'</td>';
 
 if ($filtertype != 1) { // Product
 	if (getDolGlobalInt('PRODUCT_USE_UNITS')) {

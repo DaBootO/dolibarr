@@ -759,11 +759,13 @@ class Mos extends DolibarrApi
 					throw new RestException(500, "MoLine with rowid " . $value["objectid"] . " not exist.");
 				}
 
+				$batchsn = '';
 				$tmpproduct = new Product($this->db);
 				$tmpproduct->fetch($molinetoprocess->fk_product);
-				if ($tmpproduct->status_batch) {
-					throw new RestException(500, "Product " . $tmpproduct->ref . " must be in batch, this API can't handle it currently.");
+				if ($tmpproduct->status_batch && empty($value["batchsn"])) {
+					throw new RestException(500, "Product " . $tmpproduct->ref . " needs a batch number or SN. None was provided.");
 				}
+				$batchsn = $value["batchsn"];
 
 				if (empty($value["qty"]) && $value["qty"] != 0) {
 					throw new RestException(500, "Field qty with lower or higher then 0 required in " . $arrayname);
@@ -796,19 +798,29 @@ class Mos extends DolibarrApi
 					$stockmove->origin_id = $this->mo->id;
 					if ($arrayname == "arraytoconsume") {
 						if ($qtytoprocess >= 0) {
-							$idstockmove = $stockmove->livraison(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, 0, $labelmovement, dol_now(), '', '', $tmpproduct->status_batch, $id_product_batch, $codemovement);
+							$idstockmove = $stockmove->livraison(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, 0, $labelmovement, dol_now(), '', '', $batchsn, $id_product_batch, $codemovement);
 						} else {
-							$idstockmove = $stockmove->reception(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, 0, $labelmovement, dol_now(), '', '', $tmpproduct->status_batch, $id_product_batch, $codemovement);
+							$idstockmove = $stockmove->reception(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, 0, $labelmovement, '', '', $batchsn, dol_now(), $id_product_batch, $codemovement);
 						}
 					} else {
 						if ($qtytoprocess >= 0) {
-							$idstockmove = $stockmove->reception(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, $pricetoproduce, $labelmovement, dol_now(), '', '', $tmpproduct->status_batch, $id_product_batch, $codemovement);
+							$idstockmove = $stockmove->reception(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, $pricetoproduce, $labelmovement, '', '', $batchsn, dol_now(), $id_product_batch, $codemovement);
 						} else {
-							$idstockmove = $stockmove->livraison(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, 0, $labelmovement, dol_now(), '', '', $tmpproduct->status_batch, $id_product_batch, $codemovement);
+							$idstockmove = $stockmove->livraison(DolibarrApiAccess::$user, $molinetoprocess->fk_product, $fk_warehousetoprocess, $qtytoprocess, 0, $labelmovement, dol_now(), '', '', $batchsn, $id_product_batch, $codemovement);
 						}
 					}
 					if ($idstockmove <= 0) {
-						throw new RestException(500, $stockmove->error);
+						// concat return id with explanation of error
+						$error_string = match ($idstockmove) {
+							-1 => "Failed to fetch product.",
+							-2 => "A product in the API call needs a batch number but none was provided.",
+							-3 => "Batch or Serial Number already exists with different date.",
+							-4 => "Product could not be created.",
+							-5 => "Product could not be updated.",
+							-6 => "Error in MouvementStock::_create. Serial Number already exists.",
+							-8 => "Not enough stock (negative stock is not allowed)."
+						};
+						throw new RestException(500, $idstockmove . " => " . $error_string);
 					}
 				}
 
